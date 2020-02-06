@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const authorization = require("../middlewares/authorization");
+const passwordUtils = require("./../utils/password-utils");
 const User = require("../models/user");
 
 const sendResponse = function(status, msg, token) {
@@ -40,14 +41,17 @@ const register = async function(inputEmail, inputUsername, inputPassword) {
     return sendResponse(409, "Username already exists");
   }
 
-  const user = new User({
+  const user = await new User({
     _id: new mongoose.Types.ObjectId(),
     email: inputEmail,
     username: inputUsername,
     password: inputPassword
   });
 
-  await user.save().catch(err => console.log(err));
+  await user.save().catch(err => {
+    console.log(err.message);
+    return sendResponse(400, "Sorry couldn't add the user currently");
+  });
 
   return sendResponse(200, "User added successfully");
 };

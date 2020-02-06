@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
+const env = require('dotenv');
+env.config();
 
 const startConnection = function () {
   mongoose
     .connect(
-      "mongodb+srv://dbadmin:dbpassword@cluster0-xkzme.mongodb.net/test?retryWrites=true&w=majority",
+      process.env.DB_LOCATION,
       {
         useNewUrlParser: true,
         useUnifiedTopology: true

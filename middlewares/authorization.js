@@ -1,11 +1,14 @@
 const jwt = require("jsonwebtoken");
+const env = require('dotenv');
+env.config();
+const jwtSecretKey = process.env.JWT_SECRET;
 
 const verifyToken = (req, res, next) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     console.log(req.headers);
     console.log("Authorization 6, Token: ", token);
-    const decoded = jwt.verify(token, "randomKey123");
+    const decoded = jwt.verify(token, jwtSecretKey);
     console.log("Authorization 8, Decoded Data: ", decoded);
     req.userData = decoded;
     console.log("Authorization 10, Token Verified");
@@ -22,7 +25,7 @@ const generateToken = user => {
       email: user[0].email,
       userId: user[0]._id
     },
-    "randomKey123",
+    jwtSecretKey,
     {
       expiresIn: "1h"
     }
