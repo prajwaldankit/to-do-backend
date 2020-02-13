@@ -15,17 +15,18 @@ const getSpecificTodo = async function(userId, todoId) {
   return response;
 };
 
-const addTodo = async function(userId, todoBody) {
-  const todo = new Todo({
-    _id: new mongoose.Types.ObjectId(),
-    title: todoBody.title,
-    content: todoBody.content,
-    authorId: userId,
-    createdAt: new Date().toString(),
-    checked: false
-  });
-
-  const response = await todo.save();
+const addTodo = async function(userId, todoBody, hasChild = false) {
+  const todo = new Todo(
+    new Todo({
+      _id: new mongoose.Types.ObjectId(),
+      title: todoBody.title,
+      content: todoBody.content,
+      authorId: userId,
+      createdAt: new Date().toString(),
+      checked: false
+    })
+  );
+  const response = await todo.save().catch(err => err);
 
   return response;
 };
@@ -39,12 +40,12 @@ const deleteTodo = async function(userId, todoId) {
 
 const updateTodo = async function(userId, todoId, updatedTodo) {
   console.log("Updated Todo", updatedTodo);
-  const resp = await Todo.update(
+  const response = await Todo.update(
     { authorId: userId, _id: todoId },
     { checked: updatedTodo.checked }
   );
-  console.log("resp", resp);
-  return resp;
+  console.log("resp", response);
+  return response;
 };
 
 module.exports = {

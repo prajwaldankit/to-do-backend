@@ -1,6 +1,7 @@
 const todoService = require("../services/todoService");
 
 const getAllTodos = async function(req, res, next) {
+  console.log("user data ", req.userData.iat - req.userData.exp);
   const response = await todoService.getAllTodos(req.userData.userId);
 
   res.status(200).json(response);

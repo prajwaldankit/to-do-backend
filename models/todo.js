@@ -9,6 +9,10 @@ const todoSchema = mongoose.Schema({
   content: {
     type: String
   },
+  children: {
+    type: Array
+    //subdocument here
+  },
   authorId: {
     type: String,
     required: true

@@ -8,6 +8,7 @@ router.get("/", authorization.verifyToken, todoController.getAllTodos);
 router.get("/:id", authorization.verifyToken, todoController.getSpecificTodo);
 
 router.post("/", authorization.verifyToken, todoController.addTodo);
+router.post("/", authorization.verifyToken, todoController.addTodo);
 
 router.delete(
   "/:id",

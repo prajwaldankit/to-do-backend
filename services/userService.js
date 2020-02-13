@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+
+const User = require("../models/user");
 const authorization = require("../middlewares/authorization");
 const passwordUtils = require("./../utils/password-utils");
-const User = require("../models/user");
 
 const sendResponse = function(status, msg, token) {
   if (token) {
@@ -9,7 +10,7 @@ const sendResponse = function(status, msg, token) {
       statusCode: status,
       data: {
         message: msg,
-        token: token
+        tokens: token
       }
     };
   } else {
@@ -24,8 +25,8 @@ const sendResponse = function(status, msg, token) {
 
 const checkForDuplicate = async function(key, value) {
   let isDuplicate = false;
-  await User.find({ [key]: value }).then(response => {
-    if (!(response.length == 0)) {
+  await User.findOne({ [key]: value }).then(response => {
+    if (!response) {
       isDuplicate = true;
     }
   });
@@ -41,34 +42,32 @@ const register = async function(inputEmail, inputUsername, inputPassword) {
     return sendResponse(409, "Username already exists");
   }
 
-  const user = await new User({
+  const hashInformation = await passwordUtils.hashPassword(inputPassword);
+  const user = new User({
     _id: new mongoose.Types.ObjectId(),
     email: inputEmail,
     username: inputUsername,
-    password: inputPassword
+    password: hashInformation.hash
   });
 
-  await user.save().catch(err => {
-    console.log(err.message);
-    return sendResponse(400, "Sorry couldn't add the user currently");
-  });
+  user
+    .save()
+    .catch(err => sendResponse(409, "Couldn't add the user right now"));
 
   return sendResponse(200, "User added successfully");
 };
 
 const login = async function(inputEmail, inputPassword) {
-  const response = await User.find({ email: inputEmail }).then(response => {
-    if (response.length > 0) {
-      if (inputPassword == response[0].password) {
-        const token = authorization.generateToken(response);
-        return sendResponse(200, "Authorization successful", token);
-      } else return sendResponse(401, "Wrong Password");
-    } else return sendResponse(401, "Email not found");
-  });
-  return response;
+  const response = await User.findOne({ email: inputEmail });
+  if (response) {
+    if (await passwordUtils.checkPassword(inputPassword, response.password)) {
+      const token = authorization.generateTokens(response);
+      return sendResponse(200, "Authorization successful", token);
+    } else return sendResponse(401, "Wrong Password");
+  } else return sendResponse(401, "Email not Found");
 };
 
 module.exports = {
-  login: login,
-  register: register
+  login,
+  register
 };
