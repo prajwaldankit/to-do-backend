@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const SubTask = require("./subtask");
+const Schema = mongoose.Schema;
 
-const todoSchema = mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
+const todoSchema = Schema({
   title: {
     type: String,
     required: true
@@ -9,14 +10,21 @@ const todoSchema = mongoose.Schema({
   content: {
     type: String
   },
-  children: {
-    type: Array
-    //subdocument here
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-  authorId: {
+  assignedTo: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  priority: {
     type: String,
     required: true
   },
+  subTodos: [SubTask],
   createdAt: {
     type: String,
     required: true

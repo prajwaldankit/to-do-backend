@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
 
 const User = require("../models/user");
-const authorization = require("../middlewares/authorization");
 const passwordUtils = require("./../utils/password-utils");
+const authorization = require("../middlewares/authorization");
 
-const sendResponse = function(status, msg, token) {
+const sendResponse = function(status, msg, token, user) {
   if (token) {
     return {
       statusCode: status,
       data: {
         message: msg,
-        tokens: token
+        tokens: token,
+        user: { username: user.username, level: user.level }
       }
     };
   } else {
@@ -26,7 +27,7 @@ const sendResponse = function(status, msg, token) {
 const checkForDuplicate = async function(key, value) {
   let isDuplicate = false;
   await User.findOne({ [key]: value }).then(response => {
-    if (!response) {
+    if (response) {
       isDuplicate = true;
     }
   });
@@ -42,12 +43,13 @@ const register = async function(inputEmail, inputUsername, inputPassword) {
     return sendResponse(409, "Username already exists");
   }
 
-  const hashInformation = await passwordUtils.hashPassword(inputPassword);
+  const hashedPassword = await passwordUtils.hashPassword(inputPassword);
   const user = new User({
     _id: new mongoose.Types.ObjectId(),
     email: inputEmail,
     username: inputUsername,
-    password: hashInformation.hash
+    password: hashedPassword,
+    level: "user"
   });
 
   user
@@ -58,16 +60,46 @@ const register = async function(inputEmail, inputUsername, inputPassword) {
 };
 
 const login = async function(inputEmail, inputPassword) {
-  const response = await User.findOne({ email: inputEmail });
-  if (response) {
-    if (await passwordUtils.checkPassword(inputPassword, response.password)) {
-      const token = authorization.generateTokens(response);
-      return sendResponse(200, "Authorization successful", token);
-    } else return sendResponse(401, "Wrong Password");
-  } else return sendResponse(401, "Email not Found");
+  const user = await User.findOne({ email: inputEmail });
+  if (user) {
+    try {
+      if (await passwordUtils.checkPassword(inputPassword, user.password)) {
+        const token = authorization.generateTokens(user);
+        return sendResponse(200, "Authorization successful", token, {
+          username: user.username,
+          level: user.level
+        });
+      } else return sendResponse(402, "Wrong Password");
+    } catch (error) {
+      throw error;
+    }
+  } else return sendResponse(402, "Email not Found");
+};
+
+const tokens = async function(data, info) {
+  const tokenRefresh = data.split(" ")[1];
+  const tokens = authorization.generateTokens(tokenRefresh, info);
+  return sendResponse(200, "new refresh token", tokens, {
+    username: "",
+    level: ""
+  });
+};
+
+const users = async function() {
+  const users = await User.find({ level: "user" });
+  return sendResponse(200, users);
+};
+
+const getUserData = async function(userId) {
+  const { _id, username, email } = await User.findById(userId);
+  console.log("userData", { _id, username, email });
+  return sendResponse(200, { _id, username, email });
 };
 
 module.exports = {
   login,
-  register
+  register,
+  tokens,
+  users,
+  getUserData
 };

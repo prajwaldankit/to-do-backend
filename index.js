@@ -14,8 +14,15 @@ app.use(morgan("dev"));
 parser(app);
 app.use("/users", userRoutes);
 app.use("/api/todos", todoRoutes);
-app.use("/", errorRoute);
+app.use("/", errorRoute.errorGeneral);
+app.use("/", errorRoute.errorwithmessage);
 
-app.listen(8000);
+app.listen(8000, (err, succ) => {
+  if (!err) {
+    console.log("server is up and running");
+  } else {
+    console.log("server could not be started");
+  }
+});
 
 module.exports = app;

@@ -4,11 +4,7 @@ hashPassword = plainPassword => {
   return bcrypt
     .hash(plainPassword, 10)
     .then(hash => {
-      let result = {
-        msg: "hashed Password",
-        hash
-      };
-      return Promise.resolve(result);
+      return Promise.resolve(hash);
     })
     .catch(err => {
       console.error(err.message);
@@ -23,8 +19,8 @@ checkPassword = (inputPassword, hashedPassword) => {
       return Promise.resolve(res);
     })
     .catch(err => {
-      console.error(err.message);
-      return Promise.reject(err);
+      console.error("no match password", err.message);
+      return Promise.reject("The password doesn't match. try again");
     });
 };
 

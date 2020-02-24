@@ -1,19 +1,16 @@
 const express = require("express");
-const app = express();
-const router = express.Router();
 
-router.use((req, res, next) => {
+const errorGeneral = (req, res, next) => {
   next({
     status: 404,
     message: "Not found"
   });
-});
+};
 
-router.use((error, req, res, next) => {
-  res.status(404).json({
-    status: error.status,
+const errorwithmessage = (error, req, res, next) => {
+  res.status(error.status).json({
     message: error.message
   });
-});
+};
 
-module.exports = router;
+module.exports = { errorGeneral, errorwithmessage };

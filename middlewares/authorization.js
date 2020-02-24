@@ -6,53 +6,71 @@ env.config();
 const jwtSecretKey = process.env.JWT_SECRET_ACCESS;
 const jwtSecretKeyRefresh = process.env.JWT_SECRET_REFRESH;
 
+const decodeToken = function(token, key) {
+  return jwt.verify(token, key);
+};
+
 const verifyToken = (req, res, next) => {
   try {
-    // console.log("token in original format", req.headers.authorization);
     const token = req.headers.authorization.split(" ")[1];
-    // console.log("Authorization 6, Token: ", token);
-    const decoded = jwt.verify(token, jwtSecretKey);
-    // console.log("Authorization 8, Decoded Data: ", decoded);
+    const decoded = decodeToken(token, jwtSecretKey);
     req.userData = decoded;
-    // console.log("Authorization 10, Token Verified");
     next();
   } catch (error) {
-    // console.log("Authorization 13, Token Verification Failed");
-    next({ status: 401, message: "Token Verification Failed" });
+    next({ status: 401, message: "TokenExpired" });
   }
 };
 
-const generateTokenAccess = user => {
-  const token = jwt.sign(
-    {
-      email: user.email,
-      userId: user._id
-    },
-    jwtSecretKey,
-    {
-      expiresIn: "10m"
-    }
-  );
-  return token;
+const generateToken = function(payload, key, time) {
+  return jwt.sign(payload, key, time);
+};
+
+const generateTokenAccess = tokenRefresh => {
+  try {
+    const user = decodeToken(tokenRefresh, jwtSecretKeyRefresh);
+    return generateToken(
+      {
+        userId: user.userId,
+        email: user.email,
+        level: user.level || "user"
+      },
+      jwtSecretKey,
+      {
+        expiresIn: "2m"
+      }
+    );
+  } catch (error) {
+    next({
+      status: 403,
+      message: " Refresh Token Expired"
+    });
+  }
 };
 
 const generateTokenRefresh = user => {
-  const token = jwt.sign(
+  return generateToken(
     {
       email: user.email,
-      userId: user._id
+      userId: user.userId,
+      level: user.level || "user"
     },
     jwtSecretKeyRefresh,
     {
       expiresIn: "7d"
     }
   );
-  return token;
 };
 
-const generateTokens = user => {
-  const token = generateTokenAccess(user);
+const generateTokens = (user, info) => {
+  if (info == "withRefresh") {
+    decoded = decodeToken(user, jwtSecretKeyRefresh);
+    user = decoded;
+  } else {
+    user.userId = user._id;
+  }
   const tokenRefresh = generateTokenRefresh(user);
+  const token = generateTokenAccess(tokenRefresh);
+
   return {
     token,
     tokenRefresh
