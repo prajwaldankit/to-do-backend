@@ -10,7 +10,11 @@ const decodeToken = function(token, key) {
   return jwt.verify(token, key);
 };
 
-const verifyToken = (req, res, next) => {
+const generateToken = function(payload, key, time) {
+  return jwt.sign(payload, key, time);
+};
+
+const verifyToken = function(req, res, next) {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const decoded = decodeToken(token, jwtSecretKey);
@@ -21,11 +25,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const generateToken = function(payload, key, time) {
-  return jwt.sign(payload, key, time);
-};
-
-const generateTokenAccess = tokenRefresh => {
+const generateTokenAccess = function(tokenRefresh) {
   try {
     const user = decodeToken(tokenRefresh, jwtSecretKeyRefresh);
     return generateToken(
@@ -40,14 +40,11 @@ const generateTokenAccess = tokenRefresh => {
       }
     );
   } catch (error) {
-    next({
-      status: 403,
-      message: " Refresh Token Expired"
-    });
+    throw error;
   }
 };
 
-const generateTokenRefresh = user => {
+const generateTokenRefresh = function(user) {
   return generateToken(
     {
       email: user.email,
@@ -61,7 +58,7 @@ const generateTokenRefresh = user => {
   );
 };
 
-const generateTokens = (user, info) => {
+const generateTokens = function(user, info) {
   if (info == "withRefresh") {
     decoded = decodeToken(user, jwtSecretKeyRefresh);
     user = decoded;

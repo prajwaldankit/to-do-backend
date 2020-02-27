@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const subTaskSchema = mongoose.Schema({
+const subTaskSchema = Schema({
   title: {
     type: String,
     required: true
@@ -11,6 +12,10 @@ const subTaskSchema = mongoose.Schema({
   createdAt: {
     type: String,
     required: true
+  },
+  assignedTo: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
   },
   priority: {
     type: String

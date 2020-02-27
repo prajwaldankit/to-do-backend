@@ -6,13 +6,16 @@ const getAllTodos = async function(userId, level) {
     const response = await Todo.find()
       .populate("author", "username")
       .populate("assignedTo", "username")
+      .populate("assignedUsers", "username")
       .exec();
     return response;
   } else {
-    const response = await Todo.find({ assignedTo: userId })
+    const response = await Todo.find({ assignedUsers: userId })
       .populate("author", "username")
       .populate("assignedTo", "username")
+      .populate("assignedUsers", "username")
       .exec();
+
     return response;
   }
 };
@@ -20,29 +23,35 @@ const getAllTodos = async function(userId, level) {
 const getSpecificTodo = async function(userId, todoId) {
   const response = await Todo.findOne({
     _id: todoId
-  });
+  })
+    .populate({
+      path: "subTodos.assignedTo",
+      select: { _id: 1, username: 1, email: 1, level: 1 }
+    })
+    .exec()
+    .then(res => {
+      return Promise.resolve(res);
+    });
+
   return response;
 };
 
 const addTodo = async function(userData, todoBody) {
-  console.log("todoBody", todoBody);
-  console.log("user data", userData);
   if (userData.level === "admin") {
     const todo = new Todo({
       title: todoBody.title,
       content: todoBody.content,
       author: userData.userId,
       assignedTo: todoBody.assignedTo,
+      assignedUsers: todoBody.selectedUsers,
       priority: todoBody.priority,
       createdAt: new Date().toString(),
       checked: false
     });
-    console.log("added todo", todo);
     const parent = await User.findOne({ _id: userData.userId });
     parent.listItem.push(todo._id);
     await parent.save().catch(err => err);
     const response = await todo.save().catch(err => err);
-    console.log("response, response", response);
     return response;
   } else {
     const todo = new Todo({
@@ -97,7 +106,6 @@ const updateSubTodo = async function(
   itemId,
   updatedSubTodo
 ) {
-  console.log("before executing");
   const parent = await Todo.findOne({ _id: parentId });
   parent.subTodos.id(itemId).set(updatedSubTodo);
   const response = parent.save().catch(err => err);

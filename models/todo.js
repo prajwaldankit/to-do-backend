@@ -20,6 +20,12 @@ const todoSchema = Schema({
     ref: "User",
     required: true
   },
+  assignedUsers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    }
+  ],
   priority: {
     type: String,
     required: true

@@ -1,7 +1,6 @@
 const todoService = require("../services/todoService");
 
 const getAllTodos = async function(req, res, next) {
-  console.log(req.userData);
   const response = await todoService.getAllTodos(
     req.userData.userId,
     req.userData.level
@@ -18,9 +17,7 @@ const getAllTodos = async function(req, res, next) {
 };
 
 const getSpecificTodo = async function(req, res, next) {
-  console.log("inside spec constrol");
   const todoId = req.params.id;
-  console.log(req.params);
   const response = await todoService.getSpecificTodo(
     req.userData.userId,
     todoId
@@ -52,8 +49,6 @@ const addTodo = async function(req, res, next) {
 
 const addSubTodo = async function(req, res, next) {
   const todoId = req.params.id;
-  console.log("todoid", todoId);
-  console.log("req.body", req.body);
   subTodoProps = {
     ...req.body,
     createdAt: new Date().toString(),

@@ -1,5 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
+const path = require("path");
+
 const userRoutes = require("./routes/user");
 const todoRoutes = require("./routes/todo");
 const parser = require("./utils/parser");
@@ -12,6 +14,7 @@ app.use(cors());
 mongoConnection.start();
 app.use(morgan("dev"));
 parser(app);
+app.use("/static", express.static(path.join(__dirname, "public")));
 app.use("/users", userRoutes);
 app.use("/api/todos", todoRoutes);
 app.use("/", errorRoute.errorGeneral);

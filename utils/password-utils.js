@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 
-hashPassword = plainPassword => {
+hashPassword = function(plainPassword) {
   return bcrypt
     .hash(plainPassword, 10)
     .then(hash => {
@@ -12,7 +12,7 @@ hashPassword = plainPassword => {
     });
 };
 
-checkPassword = (inputPassword, hashedPassword) => {
+checkPassword = function(inputPassword, hashedPassword) {
   return bcrypt
     .compare(inputPassword, hashedPassword)
     .then(res => {
